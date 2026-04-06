@@ -349,11 +349,7 @@ tr:hover td{background:rgba(212,160,23,.04)}
       <button onclick="tUp()" style="background:rgba(212,160,23,.13);border:1px solid rgba(212,160,23,.36);color:var(--gold);border-radius:8px;padding:5px 11px;font-size:.72rem;font-weight:600;cursor:pointer">+ Upload</button>
     </div>
     <div class="nl" id="nlist">
-      <div class="ni" data-c="exam"><div class="nd dn"></div><div><div style="font-size:.84rem;font-weight:600">📄 Board Exam Schedule 2026 Released</div><div class="ndt">Class 10 &amp; 12 · BSEB Patna · Jan 2026</div></div></div>
-      <div class="ni" data-c="admin"><div class="nd dn"></div><div><div style="font-size:.84rem;font-weight:600">📢 Admission Open Session 2026–27</div><div class="ndt">Classes 9 &amp; 11 · July 2026 · Limited Seats</div></div></div>
-      <div class="ni" data-c="exam"><div class="nd do"></div><div><div style="font-size:.84rem;font-weight:600">📝 Half-Yearly Exam Result Declared</div><div class="ndt">All Classes · Results on Notice Board · Dec 2025</div></div></div>
-      <div class="ni" data-c="admin"><div class="nd do"></div><div><div style="font-size:.84rem;font-weight:600">🏖️ Summer Vacation Notice</div><div class="ndt">School closed May 15 – June 10, 2026</div></div></div>
-      <div class="ni" data-c="exam"><div class="nd do"></div><div><div style="font-size:.84rem;font-weight:600">📋 Practical Exam Dates — Class 12</div><div class="ndt">Science &amp; Arts · Feb 2026 · School Campus</div></div></div>
+      <div id="nlist-empty" style="text-align:center;padding:1.5rem;color:var(--muted);font-size:.82rem">📭 Abhi koi notice nahi hai.<br/><span style="font-size:.72rem">Admin panel se notice publish karo.</span></div>
     </div>
     <div id="pdf-notices"></div>
     <div class="upz" id="upz" ondragover="event.preventDefault();this.classList.add('drag')" ondragleave="this.classList.remove('drag')" ondrop="doDrop(event)" onclick="tUp()">
@@ -361,6 +357,11 @@ tr:hover td{background:rgba(212,160,23,.04)}
       <div style="font-size:.8rem;font-weight:600">Drag &amp; drop or tap to upload</div>
       <div style="font-size:.68rem;color:var(--muted);margin-top:3px">PDF, DOCX, MP4 · Max 10 MB</div>
       <input type="file" id="fin" accept=".pdf,.docx,.mp4,.jpg,.png" multiple style="display:none" onchange="handleFiles(this.files)"/>
+    </div>
+    <div style="text-align:center;margin:.4rem 0;font-size:.72rem;color:var(--muted)">— ya —</div>
+    <div style="padding:0 .8rem .8rem">
+      <div style="font-size:.7rem;font-weight:600;color:var(--gold);margin-bottom:4px;letter-spacing:.04em">ADMIN PANEL SE TEXT NOTICE PUBLISH KARO</div>
+      <button onclick="go('admin',null)" style="background:rgba(212,160,23,.1);border:1px solid rgba(212,160,23,.3);color:var(--gold);border-radius:9px;padding:8px 14px;font-size:.76rem;font-weight:600;cursor:pointer;width:100%">🔐 Admin Panel Kholein →</button>
     </div>
     <div class="upfl" id="upfl"></div>
   </div>
@@ -477,7 +478,8 @@ tr:hover td{background:rgba(212,160,23,.04)}
       <div class="ac">
         <div class="ahd">📋 Publish Notice / Upload File</div>
         <div class="ab">
-          <div class="fgg" style="margin-bottom:.85rem"><label style="font-size:.7rem;font-weight:600;color:var(--gold);margin-bottom:4px;display:block;letter-spacing:.04em">NOTICE TITLE</label><input type="text" class="ai" id="antl" placeholder="e.g. Annual Exam Schedule 2026" style="margin-bottom:0"/></div>
+          <div class="fgg" style="margin-bottom:.85rem"><label style="font-size:.7rem;font-weight:600;color:var(--gold);margin-bottom:4px;display:block;letter-spacing:.04em">NOTICE TITLE *</label><input type="text" class="ai" id="antl" placeholder="e.g. Annual Exam Schedule 2026" style="margin-bottom:0"/></div>
+          <div class="fgg" style="margin-bottom:.85rem"><label style="font-size:.7rem;font-weight:600;color:var(--gold);margin-bottom:4px;display:block;letter-spacing:.04em">NOTICE BODY / DESCRIPTION (optional)</label><textarea class="ai" id="antxt" placeholder="Puri notice ka text yahan likho — file upload zaroori nahi hai..." style="margin-bottom:0;min-height:80px;resize:vertical"></textarea></div>
           <div class="fgg" style="margin-bottom:.85rem"><label style="font-size:.7rem;font-weight:600;color:var(--gold);margin-bottom:4px;display:block;letter-spacing:.04em">CATEGORY</label>
           <select id="ancat" class="ai" style="background:rgba(255,255,255,.044);color:white;margin-bottom:0">
             <option value="exam">Exam</option>
@@ -1074,15 +1076,17 @@ function aFileSelect(input){
    ============================================================ */
 function pubNotice(){
   const title=document.getElementById('antl').value.trim();
+  const body=(document.getElementById('antxt')?.value||'').trim();
   const cat=document.getElementById('ancat').value;
   if(!title){sT('⚠️ Enter notice title');return;}
 
   function doPublish(fileData,fileName,fileSize){
     const now=new Date();
     const dateStr=now.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});
-    notices.unshift({title,cat,date:dateStr,fileData:fileData||null,fileName:fileName||null,fileSize:fileSize||null});
+    notices.unshift({title,body:body||null,cat,date:dateStr,fileData:fileData||null,fileName:fileName||null,fileSize:fileSize||null});
     saveData();rNl();renderAdminNoticeList();
     document.getElementById('antl').value='';
+    const txtEl=document.getElementById('antxt');if(txtEl)txtEl.value='';
     document.getElementById('adf').value='';
     document.getElementById('adf-name').textContent='Max 2 MB · Stored locally';
     _selectedAdminFile=null;
@@ -1105,14 +1109,21 @@ function rNl(){
   const list=document.getElementById('nlist');
   if(!list)return;
   list.querySelectorAll('.ni.dynamic').forEach(el=>el.remove());
-  notices.forEach((n,idx)=>{
-    const dot='<div class="nd dn"></div>';
-    const dl=n.fileData?`<a href="${n.fileData}" download="${n.title.replace(/\s+/g,'_')}" style="display:inline-flex;align-items:center;gap:4px;margin-top:5px;background:rgba(212,160,23,.13);border:1px solid rgba(212,160,23,.3);border-radius:6px;padding:3px 9px;font-size:.68rem;color:var(--gold);text-decoration:none;font-weight:600">⬇ Download${n.fileName?' ('+n.fileSize+')':''}</a>`:'';
-    const delBtn=currentAdmin?`<button onclick="deleteNotice(${idx})" style="background:rgba(220,53,53,.13);border:1px solid rgba(220,53,53,.28);color:#f87171;border-radius:6px;padding:3px 9px;font-size:.68rem;cursor:pointer;margin-top:5px;font-weight:600">🗑 Delete</button>`:'';
-    const item=document.createElement('div');item.className='ni dynamic';item.dataset.c=n.cat;
-    item.innerHTML=`${dot}<div style="flex:1"><div style="font-size:.84rem;font-weight:600">📄 ${n.title}</div><div class="ndt">${n.cat.toUpperCase()} · ${n.date}</div><div style="display:flex;gap:6px;flex-wrap:wrap">${dl}${delBtn}</div></div>`;
-    list.insertBefore(item,list.firstChild);
-  });
+  const emptyEl=document.getElementById('nlist-empty');
+  if(notices.length===0){
+    if(emptyEl)emptyEl.style.display='block';
+  } else {
+    if(emptyEl)emptyEl.style.display='none';
+    notices.forEach((n,idx)=>{
+      const dot='<div class="nd dn"></div>';
+      const bodyHtml=n.body?`<div style="font-size:.76rem;color:rgba(200,215,245,.75);margin-top:4px;line-height:1.45;white-space:pre-wrap">${n.body}</div>`:'';
+      const dl=n.fileData?`<a href="${n.fileData}" download="${n.title.replace(/\s+/g,'_')}" style="display:inline-flex;align-items:center;gap:4px;margin-top:5px;background:rgba(212,160,23,.13);border:1px solid rgba(212,160,23,.3);border-radius:6px;padding:3px 9px;font-size:.68rem;color:var(--gold);text-decoration:none;font-weight:600">⬇ Download${n.fileName?' ('+n.fileSize+')':''}</a>`:'';
+      const delBtn=currentAdmin?`<button onclick="deleteNotice(${idx})" style="background:rgba(220,53,53,.13);border:1px solid rgba(220,53,53,.28);color:#f87171;border-radius:6px;padding:3px 9px;font-size:.68rem;cursor:pointer;margin-top:5px;font-weight:600">🗑 Delete</button>`:'';
+      const item=document.createElement('div');item.className='ni dynamic';item.dataset.c=n.cat;
+      item.innerHTML=`${dot}<div style="flex:1"><div style="font-size:.84rem;font-weight:600">📄 ${n.title}</div><div class="ndt">${n.cat.toUpperCase()} · ${n.date}</div>${bodyHtml}<div style="display:flex;gap:6px;flex-wrap:wrap">${dl}${delBtn}</div></div>`;
+      list.appendChild(item);
+    });
+  }
   const activeTab=document.querySelector('.ntab.act');
   if(activeTab)ntab(activeTab,activeTab.textContent.toLowerCase()==='all'?'all':activeTab.textContent.toLowerCase());
 }
